@@ -14,7 +14,8 @@ export async function updateSession(request: NextRequest) {
     }
   });
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  const local = request.cookies.get("mi_despensa_local")?.value === "1";
+  if (!user && !local && request.nextUrl.pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("next", request.nextUrl.pathname);

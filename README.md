@@ -1,6 +1,6 @@
 # Mi Despensa V2
 
-App web para gestionar compras familiares en Guatemala con Supabase, Google OAuth, QR, Realtime y búsqueda de precios con Gemini.
+App web para gestionar compras familiares en Guatemala con Supabase, Google OAuth, QR, Realtime y modo local sin cuenta.
 
 ## Requisitos
 
@@ -14,17 +14,15 @@ Instala Node.js 20+, Git y crea cuentas gratuitas en Google, Supabase, Vercel y 
 4. Activa Google en `Authentication > Providers`.
 5. En Google Cloud Console crea credenciales OAuth y pega Client ID/Secret en Supabase.
 6. En Supabase agrega `http://localhost:3000` como Site URL y `http://localhost:3000/auth/callback` como Redirect URL.
-7. Crea una API key en `https://aistudio.google.com/apikey`.
-8. Copia `.env.local` y reemplaza los placeholders.
-9. Ejecuta el contenido de `supabase.sql` en Supabase SQL Editor.
-10. Corre `npm run dev` y abre `http://localhost:3000`.
+7. Copia `.env.local` y reemplaza los placeholders.
+8. Ejecuta el contenido de `supabase.sql` en Supabase SQL Editor.
+9. Corre `npm run dev` y abre `http://localhost:3000`.
 
 ## Variables de entorno
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
-GEMINI_API_KEY=tu_gemini_api_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -44,4 +42,4 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - Crear grupo y QR funciona desde `/dashboard` y `/dashboard/grupo`.
 - Unirse por código funciona desde `/unirse?codigo=...`.
 - Los productos usan Supabase Realtime por la tabla `productos`.
-- Gemini se consulta solo desde `/api/gemini` y guarda historial de precios.
+- Los precios se registran manualmente al agregar o marcar productos como comprados.
