@@ -12,9 +12,25 @@ export function PriceHistoryHighlights() {
   });
   const up = rows.filter((r) => r.change > 0).sort((a, b) => b.change - a.change).slice(0, 3);
   const deals = rows.filter((r) => r.change < 0).sort((a, b) => a.change - b.change).slice(0, 3);
-  return <section className="grid gap-4 lg:grid-cols-2"><Card title="Productos que más subieron" rows={up}/><Card title="Mejores precios recientes" rows={deals}/></section>;
+  return <section className="grid gap-4"><Card title="Productos que más subieron" rows={up}/><Card title="Mejores precios recientes" rows={deals}/></section>;
 }
 
 function Card({ title, rows }: { title: string; rows: { name: string; first: number; last: number; change: number }[] }) {
-  return <div className="panel rounded-[28px] p-5"><h2 className="text-xl font-black tracking-[-.04em]">{title}</h2>{rows.length ? <div className="mt-3 grid gap-2">{rows.map((row) => <div key={row.name} className="rounded-[18px] bg-white/65 p-3"><p className="font-black capitalize">{row.name}</p><p className="text-sm text-tinta/60">Antes {formatoQ.format(row.first)} · Último {formatoQ.format(row.last)} · {Math.abs(row.change).toFixed(1)}%</p></div>)}</div> : <p className="mt-3 text-sm text-tinta/60">Todavía no hay suficiente historial para mostrar esta comparación.</p>}</div>;
+  return (
+    <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+      <h2 className="font-bold">{title}</h2>
+      {rows.length ? (
+        <div className="mt-3 grid gap-2">
+          {rows.map((row) => (
+            <div key={row.name} className="rounded-lg bg-[var(--bg)] p-3">
+              <p className="font-bold capitalize">{row.name}</p>
+              <p className="text-sm text-[var(--muted)]">Antes {formatoQ.format(row.first)} · Último {formatoQ.format(row.last)} · {Math.abs(row.change).toFixed(1)}%</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-[var(--muted)]">Todavía no hay suficiente historial.</p>
+      )}
+    </div>
+  );
 }

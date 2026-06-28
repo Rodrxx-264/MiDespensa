@@ -1,6 +1,1 @@
-import Link from "next/link";
-import { BarChart3, Clock3, Home, Settings, Store, Users, Warehouse } from "lucide-react";
-import { UserMenu } from "./UserMenu";
-
-const nav = [{ href: "/dashboard", label: "Lista", icon: Home }, { href: "/dashboard/despensa", label: "Despensa", icon: Warehouse }, { href: "/dashboard/tiendas", label: "Tiendas", icon: Store }, { href: "/dashboard/historial", label: "Historial", icon: Clock3 }, { href: "/dashboard/estadisticas", label: "Estadísticas", icon: BarChart3 }, { href: "/dashboard/grupo", label: "Grupo", icon: Users }, { href: "/dashboard/ajustes", label: "Ajustes", icon: Settings }];
-export function Sidebar({ user }: { user: { nombre: string; avatar_url?: string | null } }) { return <aside className="hidden border-r border-tinta/10 bg-white/45 p-5 backdrop-blur-xl md:block"><Link href="/dashboard" className="flex items-center gap-3 text-xl font-black tracking-[-.04em] text-tinta"><span className="grid h-10 w-10 place-items-center rounded-full bg-tinta text-sm text-white">MD</span>Mi Despensa</Link><nav className="mt-10 grid gap-2" aria-label="Dashboard">{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className="flex min-h-12 items-center gap-3 rounded-2xl px-4 font-semibold text-tinta/65 transition hover:bg-white/70 hover:text-tinta"><Icon aria-hidden="true" size={19}/>{label}</Link>)}</nav><div className="absolute bottom-5 w-[200px]"><UserMenu user={user}/></div></aside>; }
+export function Sidebar() { return null; }

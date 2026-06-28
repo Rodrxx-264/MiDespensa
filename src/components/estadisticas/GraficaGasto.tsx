@@ -1,3 +1,20 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-export function GraficaGasto({ data }: { data: { fecha: string; total: number }[] }) { return <section className="panel rounded-[28px] p-5"><h2 className="text-xl font-black tracking-[-.04em]">Gasto por período</h2><div className="mt-4 h-72"><ResponsiveContainer><BarChart data={data}><CartesianGrid strokeDasharray="3 3" stroke="rgba(17,24,39,.10)"/><XAxis dataKey="fecha"/><YAxis/><Tooltip/><Bar dataKey="total" fill="#111827" radius={[10,10,0,0]}/></BarChart></ResponsiveContainer></div></section>; }
+export function GraficaGasto({ data }: { data: { fecha: string; total: number }[] }) {
+  return (
+    <section className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+      <h2 className="font-bold">Gasto por período</h2>
+      <div className="mt-4 h-60">
+        <ResponsiveContainer>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+            <XAxis dataKey="fecha" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="total" fill="var(--ink)" radius={[8,8,0,0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
