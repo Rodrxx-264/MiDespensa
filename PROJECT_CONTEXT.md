@@ -60,6 +60,29 @@ mi-despensa/
 
 ## Funcionalidades actuales
 
+### Onboarding, ajustes y privacidad
+
+La app incluye onboarding inicial en `/dashboard/bienvenida`, visible hasta que `onboardingCompleted` sea verdadero. Pregunta únicamente datos no sensibles: tipo de uso, frecuencia de compra, presupuesto aproximado, tipos de tienda y objetivos principales.
+
+Preferencias:
+
+- Local: `userPreferences` dentro de `mi_despensa_local_data`.
+- Supabase: tabla `user_preferences` con RLS por usuario.
+
+Pantalla de ajustes:
+
+```txt
+/dashboard/ajustes
+```
+
+Incluye cuenta, apariencia, preferencias de compra, privacidad, exportación/borrado de datos, open source y seguridad.
+
+Documentos agregados:
+
+- `PRIVACY.md`
+- `CONTRIBUTING.md`
+- `LICENSE`
+
 ### Funciones inteligentes de presupuesto y compra
 
 La app ahora incluye lógica local, sin APIs externas de IA, para ayudar a comprar sin pasarse del presupuesto:

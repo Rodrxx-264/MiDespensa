@@ -10,3 +10,5 @@ export type CategoryBudget = { id: string; list_id: string; category: string; bu
 export type PantryItem = { id: string; group_id: string; name: string; normalized_name: string; quantity: number; unit: string | null; category: string | null; expires_at: string | null; low_stock: boolean; created_by: string | null; created_at: string; updated_at: string };
 export type PriceHistoryEntry = { id: string; group_id: string | null; list_id: string | null; product_name: string; normalized_product_name: string; store: string | null; price: number; quantity: number; unit: string | null; purchased_at: string };
 export type ParsedProduct = { name: string; quantity: number; unit?: string; category?: string; priority?: ProductPriority };
+export type ThemePreference = "light" | "dark" | "system";
+export type UserPreferences = { onboardingCompleted: boolean; usageType?: "personal" | "family" | "events" | "small_business"; shoppingFrequency?: "daily" | "weekly" | "biweekly" | "monthly" | "as_needed"; defaultBudgetRange?: string; defaultBudgetAmount?: number; preferredStoreTypes: string[]; mainGoals: string[]; theme: ThemePreference; currency: "GTQ"; privacyMode: boolean };

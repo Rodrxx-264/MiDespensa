@@ -1,6 +1,22 @@
-# Mi Despensa V2
+# Mi Despensa
 
-App web para gestionar compras familiares en Guatemala con Supabase, Google OAuth, QR, Realtime y modo local sin cuenta.
+App web mobile-first para comprar mejor, cuidar presupuesto, evitar desperdicio y entender precios con datos propios. Funciona en modo local sin cuenta o sincronizada con Supabase/Google.
+
+## Enfoque de privacidad
+
+Mi Despensa no vende datos, no usa publicidad y no incluye rastreadores ocultos. Solo guarda información necesaria para listas, presupuestos, historial, despensa y sugerencias. Consulta `PRIVACY.md`.
+
+## Funciones principales
+
+- Lista activa con presupuesto y modo compra.
+- Prioridad por producto y modo `No me alcanza`.
+- Presupuesto por categoría.
+- Pegar listas desde WhatsApp/texto.
+- Historial de precios y comparador de tiendas según tus datos.
+- Despensa en casa.
+- Onboarding privado y ajustes.
+- Exportar/borrar datos.
+- Modo local sin cuenta.
 
 ## Requisitos
 
@@ -34,6 +50,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 4. En Supabase actualiza Site URL con tu dominio de Vercel.
 5. Agrega `https://tu-dominio.vercel.app/auth/callback` a Redirect URLs.
 6. Haz deploy.
+
+## Contribuir
+
+Lee `CONTRIBUTING.md`. El proyecto prioriza privacidad, mobile-first y lógica transparente sin dependencias obligatorias de IA externa.
 
 ## Verificación funcional
 

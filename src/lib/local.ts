@@ -1,15 +1,17 @@
 import { hoyLista } from "@/lib/utils";
 import { normalizeProductName } from "@/lib/shopping/normalize";
-import type { CategoryBudget, Grupo, Lista, PantryItem, Perfil, PriceHistoryEntry, Producto } from "@/types";
+import type { CategoryBudget, Grupo, Lista, PantryItem, Perfil, PriceHistoryEntry, Producto, UserPreferences } from "@/types";
 
 const now = () => new Date().toISOString();
 export const isLocalMode = () => typeof document !== "undefined" && document.cookie.includes("mi_despensa_local=1");
 
-type LocalState = { perfil: Perfil; grupo: Grupo | null; miembros: Perfil[]; listas: Lista[]; productos: Producto[]; categoryBudgets: CategoryBudget[]; pantryItems: PantryItem[]; priceHistory: PriceHistoryEntry[] };
+type LocalState = { perfil: Perfil; grupo: Grupo | null; miembros: Perfil[]; listas: Lista[]; productos: Producto[]; categoryBudgets: CategoryBudget[]; pantryItems: PantryItem[]; priceHistory: PriceHistoryEntry[]; userPreferences: UserPreferences; manualDeals: unknown[]; recipes: unknown[]; recipeIngredients: unknown[]; productSubstitutes: unknown[]; shoppingRules: unknown[]; ticketDrafts: unknown[] };
+
+export function defaultPreferences(): UserPreferences { return { onboardingCompleted: false, preferredStoreTypes: [], mainGoals: [], theme: "system", currency: "GTQ", privacyMode: true }; }
 
 function initialState(): LocalState {
   const id = "local-user";
-  return { perfil: { id, nombre: "Invitado local", email: "local@mi-despensa", avatar_url: null, grupo_id: null, created_at: now(), updated_at: now() }, grupo: null, miembros: [], listas: [], productos: [], categoryBudgets: [], pantryItems: [], priceHistory: [] };
+  return { perfil: { id, nombre: "Invitado local", email: "local@mi-despensa", avatar_url: null, grupo_id: null, created_at: now(), updated_at: now() }, grupo: null, miembros: [], listas: [], productos: [], categoryBudgets: [], pantryItems: [], priceHistory: [], userPreferences: defaultPreferences(), manualDeals: [], recipes: [], recipeIngredients: [], productSubstitutes: [], shoppingRules: [], ticketDrafts: [] };
 }
 
 export function readLocalState(): LocalState {
@@ -24,6 +26,13 @@ function migrateLocalState(state: LocalState): LocalState {
   state.categoryBudgets ??= [];
   state.pantryItems ??= [];
   state.priceHistory ??= [];
+  state.userPreferences = { ...defaultPreferences(), ...(state.userPreferences ?? {}) };
+  state.manualDeals ??= [];
+  state.recipes ??= [];
+  state.recipeIngredients ??= [];
+  state.productSubstitutes ??= [];
+  state.shoppingRules ??= [];
+  state.ticketDrafts ??= [];
   state.productos = (state.productos ?? []).map((p) => ({ ...p, priority: p.priority ?? "important", status: p.status ?? (p.estado === "comprado" ? "purchased" : "pending"), normalized_name: p.normalized_name ?? normalizeProductName(p.nombre), substitute_name: p.substitute_name ?? null, purchase_note: p.purchase_note ?? null }));
   return state;
 }

@@ -232,3 +232,29 @@ end;
 $$;
 
 grant execute on function join_group_by_code(text) to authenticated;
+
+create table if not exists user_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade unique,
+  onboarding_completed boolean not null default false,
+  usage_type text,
+  shopping_frequency text,
+  default_budget_range text,
+  default_budget_amount numeric,
+  preferred_store_types text[] default '{}',
+  main_goals text[] default '{}',
+  theme text not null default 'system',
+  currency text not null default 'GTQ',
+  privacy_mode boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table user_preferences enable row level security;
+create policy "ver preferencias propias" on user_preferences for select using (user_id = auth.uid());
+create policy "insertar preferencias propias" on user_preferences for insert with check (user_id = auth.uid());
+create policy "actualizar preferencias propias" on user_preferences for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "eliminar preferencias propias" on user_preferences for delete using (user_id = auth.uid());
+
+drop trigger if exists user_preferences_updated_at on user_preferences;
+create trigger user_preferences_updated_at before update on user_preferences for each row execute function set_updated_at();
