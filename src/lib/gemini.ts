@@ -1,6 +1,7 @@
 import type { Producto, ResultadoGemini } from "@/types";
 
 export async function buscarPreciosGemini(producto?: string, lista?: Producto[]): Promise<ResultadoGemini> {
+  if (!process.env.GEMINI_API_KEY) throw new Error("Falta configurar GEMINI_API_KEY en las variables de entorno del servidor.");
   const objetivo = lista?.length
     ? lista.map((p) => `${p.nombre} (${p.cantidad} ${p.unidad})`).join(", ")
     : producto;
@@ -28,11 +29,10 @@ export async function buscarPreciosGemini(producto?: string, lista?: Producto[])
   if (!response.ok) {
     const errorText = await response.text();
     console.error("Gemini error:", response.status, errorText);
-    throw new Error(`Gemini error ${response.status}: ${errorText}`);
+    throw new Error(`Gemini respondió ${response.status}: ${errorText}`);
   }
 
   const json = await response.json();
-  console.log("Gemini raw response:", JSON.stringify(json, null, 2));
 
   const parts = json.candidates?.[0]?.content?.parts ?? [];
   const text = parts.map((p: { text?: string }) => p.text ?? "").join("\n").trim();
