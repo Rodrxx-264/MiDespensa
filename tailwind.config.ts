@@ -5,14 +5,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bosque: "#12372A",
-        menta: "#74C69D",
-        naranja: "#B9945D",
-        crema: "#F7F4EC",
-        tinta: "#111827"
+        bosque: "#0D3B32",
+        menta: "#1B7F65",
+        naranja: "#D6A531",
+        crema: "#EEF1EA",
+        tinta: "#18201D"
       },
       borderRadius: { card: "12px", control: "8px" },
-      boxShadow: { suave: "0 24px 70px rgba(17, 24, 39, 0.08)" }
+      boxShadow: { suave: "0 24px 70px rgba(24, 32, 29, 0.10)" }
     }
   },
   plugins: []

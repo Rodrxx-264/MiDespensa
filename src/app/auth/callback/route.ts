@@ -6,5 +6,7 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const next = url.searchParams.get("next") ?? "/dashboard";
   if (code) await createClient().auth.exchangeCodeForSession(code);
-  return NextResponse.redirect(new URL(next, url.origin));
+  const response = NextResponse.redirect(new URL(next, url.origin));
+  response.cookies.set("mi_despensa_local", "", { path: "/", maxAge: 0 });
+  return response;
 }
