@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
-import { normalizeGroupCode } from "@/lib/group-code";
+import { isValidGroupCode, normalizeGroupCode } from "@/lib/group-code";
 import type { Grupo, Perfil } from "@/types";
 
 export function UnirseGrupo() {
@@ -13,8 +13,26 @@ export function UnirseGrupo() {
   useEffect(() => { if (codigo) void buscarGrupo(codigo); }, []);
   useEffect(() => { if (!scanOpen) return; void iniciarCamara(); return detenerCamara; }, [scanOpen]);
   async function inicializar() { const { data: { user } } = await supabase.auth.getUser(); if (!user) return router.push(`/auth/login?codigo=${codigo}`); const { data: p } = await supabase.from("perfiles").select("*").eq("id", user.id).maybeSingle(); if (p) { setPerfil(p); return; } const perfilNuevo = { id: user.id, nombre: user.user_metadata?.full_name ?? user.email ?? "Usuario", email: user.email ?? "", avatar_url: user.user_metadata?.avatar_url ?? null, grupo_id: null }; const { data: creado, error } = await supabase.from("perfiles").upsert(perfilNuevo).select("*").single(); if (error) setError(error.message); else setPerfil(creado); }
-  async function buscarGrupo(valor = codigo) { setError(""); const limpio = normalizeGroupCode(valor); setCodigo(limpio); setGrupo(null); if (!limpio) return; const { data: g, error } = await supabase.from("grupos").select("*").ilike("codigo_qr", limpio).maybeSingle(); if (error) setError("No pudimos validar el código todavía. Puedes intentar unirte directamente."); else if (!g) setError("No encontramos un grupo con ese código. Revisa que esté escrito completo o intenta escanear el QR."); else setGrupo(g); }
-  async function unirse() { setError(""); const limpio = normalizeGroupCode(codigo); const { data: { user } } = await supabase.auth.getUser(); if (!user) return router.push(`/auth/login?codigo=${limpio}`); if (perfil?.grupo_id) return setError("Ya perteneces a un grupo. Sal del grupo actual antes de unirte a otro."); const { data, error } = await supabase.rpc("join_group_by_code", { invite_code: limpio }); if (!error) { setGrupo(Array.isArray(data) ? data[0] : data); router.push("/dashboard"); return; } const { data: g } = await supabase.from("grupos").select("*").ilike("codigo_qr", limpio).maybeSingle(); if (!g) { setError("No encontramos un grupo con ese código. Pide que regeneren el código desde Grupo y vuelve a intentarlo."); return; } const { error: updateError } = await supabase.from("perfiles").update({ grupo_id: g.id }).eq("id", user.id); if (updateError) setError(updateError.message); else router.push("/dashboard"); }
+  async function buscarGrupo(valor = codigo) {
+    setError(""); const limpio = normalizeGroupCode(valor); setCodigo(limpio); setGrupo(null); if (!limpio) return;
+    if (limpio.length === 8 && !isValidGroupCode(limpio)) { setError("El código no es válido. Pedí que regeneren el QR."); return; }
+    const { data: g, error } = await supabase.from("grupos").select("*").eq("codigo_qr", limpio).maybeSingle();
+    if (error) setError("No pudimos validar el código todavía. Puedes intentar unirte directamente.");
+    else if (!g) setError("No encontramos un grupo con ese código. Revisá que esté bien escrito o pedí que regeneren el QR.");
+    else setGrupo(g);
+  }
+  async function unirse() {
+    setError(""); const limpio = normalizeGroupCode(codigo);
+    if (limpio.length === 8 && !isValidGroupCode(limpio)) { setError("El código no es válido. Pedí que regeneren el QR."); return; }
+    const { data: { user } } = await supabase.auth.getUser(); if (!user) return router.push(`/auth/login?codigo=${limpio}`);
+    if (perfil?.grupo_id) return setError("Ya perteneces a un grupo. Sal del grupo actual antes de unirte a otro.");
+    const { data, error } = await supabase.rpc("join_group_by_code", { invite_code: limpio });
+    if (!error) { setGrupo(Array.isArray(data) ? data[0] : data); router.push("/dashboard"); return; }
+    const { data: g } = await supabase.from("grupos").select("*").eq("codigo_qr", limpio).maybeSingle();
+    if (!g) { setError("No encontramos un grupo con ese código. Pide que regeneren el código desde Grupo y vuelve a intentarlo."); return; }
+    const { error: updateError } = await supabase.from("perfiles").update({ grupo_id: g.id }).eq("id", user.id);
+    if (updateError) setError(updateError.message); else router.push("/dashboard");
+  }
   async function iniciarCamara() {
     try {
       setScanError("");
@@ -35,5 +53,5 @@ export function UnirseGrupo() {
     } catch { setScanError("No se pudo acceder a la cámara. Revisa permisos o ingresa el código manualmente."); }
   }
   function detenerCamara() { streamRef.current?.getTracks().forEach((track) => track.stop()); streamRef.current = null; }
-  return <section className="rounded-xl border border-[var(--line)] bg-[var(--surface)] mx-auto max-w-lg p-6"><p className="eyebrow">Invitación</p><h1 className="mt-2 text-4xl font-black tracking-[-.06em]">Unirse a un grupo</h1><p className="mt-2 text-sm text-[var(--muted)]">Escanea el QR o escribe el código corto de 6 caracteres.</p><div className="mt-5 grid gap-2"><Button onClick={() => setScanOpen((v) => !v)}>{scanOpen ? "Cerrar cámara" : "Escanear QR"}</Button>{scanOpen && <div className="overflow-hidden rounded-[24px] bg-[var(--ink)]"><video ref={videoRef} autoPlay playsInline muted className="aspect-square w-full object-cover" aria-label="Vista de cámara para escanear QR"/></div>}{scanError && <p className="rounded-[18px] bg-[var(--surface)] p-3 text-sm text-[#8b3f2f]">{scanError}</p>}<div className="flex flex-col gap-2 sm:flex-row"><Input className="font-mono text-lg uppercase tracking-[.18em]" value={codigo} onChange={(e) => setCodigo(normalizeGroupCode(e.target.value))} placeholder="ABC123" maxLength={36}/><Button variant="secondary" onClick={() => buscarGrupo()}>Buscar</Button></div><Button disabled={!codigo} onClick={unirse}>Unirme con este código</Button></div>{error && <p className="mt-3 rounded-[18px] bg-[var(--surface)] p-3 text-sm text-[#8b3f2f]">{error}</p>}{grupo && <div className="mt-5 rounded-2xl bg-[var(--surface)] p-4"><p className="text-sm text-[var(--muted)]">Grupo encontrado:</p><h2 className="text-xl font-black tracking-[-.04em]">{grupo.nombre}</h2>{perfil?.grupo_id ? <p className="mt-2 text-red-700">Ya perteneces a un grupo. Debes salir primero.</p> : <Button className="mt-3" onClick={unirse}>Unirme</Button>}</div>}</section>;
+  return <section className="rounded-xl border border-[var(--line)] bg-[var(--surface)] mx-auto max-w-lg p-6"><p className="eyebrow">Invitación</p><h1 className="mt-2 text-4xl font-black tracking-[-.06em]">Unirse a un grupo</h1><p className="mt-2 text-sm text-[var(--muted)]">Escanea el QR o escribe el código de 8 caracteres.</p><div className="mt-5 grid gap-2"><Button onClick={() => setScanOpen((v) => !v)}>{scanOpen ? "Cerrar cámara" : "Escanear QR"}</Button>{scanOpen && <div className="overflow-hidden rounded-[24px] bg-[var(--ink)]"><video ref={videoRef} autoPlay playsInline muted className="aspect-square w-full object-cover" aria-label="Vista de cámara para escanear QR"/></div>}{scanError && <p className="rounded-[18px] bg-[var(--surface)] p-3 text-sm text-[#8b3f2f]">{scanError}</p>}<div className="flex flex-col gap-2 sm:flex-row"><Input className="font-mono text-lg uppercase tracking-[.18em]" value={codigo} onChange={(e) => setCodigo(normalizeGroupCode(e.target.value))} placeholder="ABC123XY" maxLength={36}/><Button variant="secondary" onClick={() => buscarGrupo()}>Buscar</Button></div><Button disabled={!codigo} onClick={unirse}>Unirme con este código</Button></div>{error && <p className="mt-3 rounded-[18px] bg-[var(--surface)] p-3 text-sm text-[#8b3f2f]">{error}</p>}{grupo && <div className="mt-5 rounded-2xl bg-[var(--surface)] p-4"><p className="text-sm text-[var(--muted)]">Grupo encontrado:</p><h2 className="text-xl font-black tracking-[-.04em]">{grupo.nombre}</h2>{perfil?.grupo_id ? <p className="mt-2 text-red-700">Ya perteneces a un grupo. Debes salir primero.</p> : <Button className="mt-3" onClick={unirse}>Unirme</Button>}</div>}</section>;
 }

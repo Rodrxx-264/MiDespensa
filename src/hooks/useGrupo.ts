@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@/lib/supabase/client";
 import { isLocalMode, readLocalState, writeLocalState } from "@/lib/local";
-import { createGroupCode, normalizeGroupCode } from "@/lib/group-code";
+import { createGroupCode, isValidGroupCode, normalizeGroupCode } from "@/lib/group-code";
 import type { Grupo, Perfil } from "@/types";
 
 export function useGrupo() {
@@ -78,8 +78,11 @@ export function useGrupo() {
     setError(null);
     if (isLocalMode()) { setError("El modo local no puede unirse a grupos en la nube."); return; }
     try {
-      const { data: g, error: err } = await supabase.from("grupos").select("*").eq("codigo_qr", normalizeGroupCode(codigo)).single();
+      const limpio = normalizeGroupCode(codigo);
+      if (limpio.length === 8 && !isValidGroupCode(limpio)) { setError("El código no es válido. Pedí que regeneren el QR."); return; }
+      const { data: g, error: err } = await supabase.from("grupos").select("*").eq("codigo_qr", limpio).maybeSingle();
       if (err) throw err;
+      if (!g) { setError("No encontramos un grupo con ese código. Revisá que esté bien escrito o pedí que regeneren el QR."); return; }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError("Sesión requerida"); return; }
       await supabase.from("perfiles").update({ grupo_id: g.id }).eq("id", user.id);

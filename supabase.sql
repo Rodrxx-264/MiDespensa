@@ -207,7 +207,7 @@ declare
   target_group grupos%rowtype;
   normalized_code text;
 begin
-  normalized_code := upper(regexp_replace(trim(invite_code), '[^A-Za-z0-9-]', '', 'g'));
+  normalized_code := upper(replace(regexp_replace(trim(invite_code), '[^A-Za-z0-9-]', '', 'g'), 'O', '0'));
 
   select * into target_group
   from grupos g
