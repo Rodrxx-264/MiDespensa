@@ -64,10 +64,10 @@ create table if not exists historial_precios (
   fecha_consulta timestamptz default now()
 );
 
-create index idx_perfiles_grupo on perfiles(grupo_id);
-create index idx_listas_grupo_estado on listas(grupo_id, estado);
-create index idx_productos_lista on productos(lista_id);
-create index idx_historial_grupo_producto on historial_precios(grupo_id, producto_nombre);
+create index if not exists idx_perfiles_grupo on perfiles(grupo_id);
+create index if not exists idx_listas_grupo_estado on listas(grupo_id, estado);
+create index if not exists idx_productos_lista on productos(lista_id);
+create index if not exists idx_historial_grupo_producto on historial_precios(grupo_id, producto_nombre);
 
 alter table perfiles enable row level security;
 alter table grupos enable row level security;
