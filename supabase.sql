@@ -1,7 +1,7 @@
 create extension if not exists pgcrypto;
 create extension if not exists unaccent;
 
-create table grupos (
+create table if not exists grupos (
   id uuid default gen_random_uuid() primary key,
   nombre text not null,
   codigo_qr text unique not null,
@@ -9,7 +9,7 @@ create table grupos (
   created_at timestamptz default now()
 );
 
-create table perfiles (
+create table if not exists perfiles (
   id uuid references auth.users(id) primary key,
   nombre text not null,
   email text not null,
@@ -19,7 +19,7 @@ create table perfiles (
   updated_at timestamptz default now()
 );
 
-create table listas (
+create table if not exists listas (
   id uuid default gen_random_uuid() primary key,
   grupo_id uuid references grupos(id) not null,
   nombre text not null,
@@ -33,7 +33,7 @@ create table listas (
   completada_at timestamptz
 );
 
-create table productos (
+create table if not exists productos (
   id uuid default gen_random_uuid() primary key,
   lista_id uuid references listas(id) on delete cascade not null,
   nombre text not null,
@@ -54,7 +54,7 @@ create table productos (
   updated_at timestamptz default now()
 );
 
-create table historial_precios (
+create table if not exists historial_precios (
   id uuid default gen_random_uuid() primary key,
   grupo_id uuid references grupos(id),
   producto_nombre text not null,
@@ -75,24 +75,39 @@ alter table listas enable row level security;
 alter table productos enable row level security;
 alter table historial_precios enable row level security;
 
+drop policy if exists "ver perfil propio o del grupo" on perfiles;
 create policy "ver perfil propio o del grupo" on perfiles for select using (id = auth.uid() or grupo_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "actualizar perfil propio" on perfiles;
 create policy "actualizar perfil propio" on perfiles for update using (id = auth.uid()) with check (id = auth.uid());
+drop policy if exists "insertar perfil propio" on perfiles;
 create policy "insertar perfil propio" on perfiles for insert with check (id = auth.uid());
 
+drop policy if exists "ver grupos propios" on grupos;
 create policy "ver grupos propios" on grupos for select using (id in (select grupo_id from perfiles where id = auth.uid()) or codigo_qr is not null);
+drop policy if exists "crear grupo" on grupos;
 create policy "crear grupo" on grupos for insert with check (admin_id = auth.uid());
+drop policy if exists "admin actualiza grupo" on grupos;
 create policy "admin actualiza grupo" on grupos for update using (admin_id = auth.uid()) with check (admin_id = auth.uid());
 
+drop policy if exists "ver listas del grupo" on listas;
 create policy "ver listas del grupo" on listas for select using (grupo_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "insertar listas del grupo" on listas;
 create policy "insertar listas del grupo" on listas for insert with check (grupo_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "actualizar listas del grupo" on listas;
 create policy "actualizar listas del grupo" on listas for update using (grupo_id in (select grupo_id from perfiles where id = auth.uid())) with check (grupo_id in (select grupo_id from perfiles where id = auth.uid()));
 
+drop policy if exists "ver productos del grupo" on productos;
 create policy "ver productos del grupo" on productos for select using (lista_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "insertar productos del grupo" on productos;
 create policy "insertar productos del grupo" on productos for insert with check (lista_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "actualizar productos del grupo" on productos;
 create policy "actualizar productos del grupo" on productos for update using (lista_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid())) with check (lista_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "eliminar productos del grupo" on productos;
 create policy "eliminar productos del grupo" on productos for delete using (lista_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
 
+drop policy if exists "ver historial del grupo" on historial_precios;
 create policy "ver historial del grupo" on historial_precios for select using (grupo_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "insertar historial del grupo" on historial_precios;
 create policy "insertar historial del grupo" on historial_precios for insert with check (grupo_id in (select grupo_id from perfiles where id = auth.uid()));
 
 create or replace function set_updated_at() returns trigger as $$ begin new.updated_at = now(); return new; end; $$ language plpgsql;
@@ -181,14 +196,22 @@ create index if not exists idx_category_budgets_list on category_budgets (list_i
 alter table category_budgets enable row level security;
 alter table pantry_items enable row level security;
 
+drop policy if exists "ver presupuestos categoria del grupo" on category_budgets;
 create policy "ver presupuestos categoria del grupo" on category_budgets for select using (list_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "insertar presupuestos categoria del grupo" on category_budgets;
 create policy "insertar presupuestos categoria del grupo" on category_budgets for insert with check (list_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "actualizar presupuestos categoria del grupo" on category_budgets;
 create policy "actualizar presupuestos categoria del grupo" on category_budgets for update using (list_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid())) with check (list_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
+drop policy if exists "eliminar presupuestos categoria del grupo" on category_budgets;
 create policy "eliminar presupuestos categoria del grupo" on category_budgets for delete using (list_id in (select l.id from listas l join perfiles p on p.grupo_id = l.grupo_id where p.id = auth.uid()));
 
+drop policy if exists "ver despensa del grupo" on pantry_items;
 create policy "ver despensa del grupo" on pantry_items for select using (group_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "insertar despensa del grupo" on pantry_items;
 create policy "insertar despensa del grupo" on pantry_items for insert with check (group_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "actualizar despensa del grupo" on pantry_items;
 create policy "actualizar despensa del grupo" on pantry_items for update using (group_id in (select grupo_id from perfiles where id = auth.uid())) with check (group_id in (select grupo_id from perfiles where id = auth.uid()));
+drop policy if exists "eliminar despensa del grupo" on pantry_items;
 create policy "eliminar despensa del grupo" on pantry_items for delete using (group_id in (select grupo_id from perfiles where id = auth.uid()));
 
 drop trigger if exists category_budgets_updated_at on category_budgets;
@@ -251,9 +274,13 @@ create table if not exists user_preferences (
 );
 
 alter table user_preferences enable row level security;
+drop policy if exists "ver preferencias propias" on user_preferences;
 create policy "ver preferencias propias" on user_preferences for select using (user_id = auth.uid());
+drop policy if exists "insertar preferencias propias" on user_preferences;
 create policy "insertar preferencias propias" on user_preferences for insert with check (user_id = auth.uid());
+drop policy if exists "actualizar preferencias propias" on user_preferences;
 create policy "actualizar preferencias propias" on user_preferences for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "eliminar preferencias propias" on user_preferences;
 create policy "eliminar preferencias propias" on user_preferences for delete using (user_id = auth.uid());
 
 drop trigger if exists user_preferences_updated_at on user_preferences;
@@ -272,9 +299,13 @@ create table if not exists push_tokens (
 );
 
 alter table push_tokens enable row level security;
+drop policy if exists "ver tokens propios" on push_tokens;
 create policy "ver tokens propios" on push_tokens for select using (user_id = auth.uid());
+drop policy if exists "insertar tokens propios" on push_tokens;
 create policy "insertar tokens propios" on push_tokens for insert with check (user_id = auth.uid());
+drop policy if exists "actualizar tokens propios" on push_tokens;
 create policy "actualizar tokens propios" on push_tokens for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "eliminar tokens propios" on push_tokens;
 create policy "eliminar tokens propios" on push_tokens for delete using (user_id = auth.uid());
 create index if not exists idx_push_tokens_user on push_tokens (user_id);
 
