@@ -38,6 +38,8 @@ body {
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 button, input, select, textarea { font: inherit; }
@@ -45,7 +47,14 @@ a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--accent); color: var(--ink); }
 
-.touch { min-height: 44px; }
+.touch { min-height: 44px; min-width: 44px; cursor: pointer; }
 .line-through-soft { text-decoration: line-through; opacity: .58; }
 .eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--jade); }
 .metric { font-variant-numeric: tabular-nums; }
+
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top { padding-top: env(safe-area-inset-top); }
+
+input, textarea, select { font-size: 16px; }
+
+.no-select { user-select: none; -webkit-user-select: none; }

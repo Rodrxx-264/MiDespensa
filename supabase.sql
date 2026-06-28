@@ -258,3 +258,25 @@ create policy "eliminar preferencias propias" on user_preferences for delete usi
 
 drop trigger if exists user_preferences_updated_at on user_preferences;
 create trigger user_preferences_updated_at before update on user_preferences for each row execute function set_updated_at();
+
+-- Push notifications tokens
+create table if not exists push_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  token text not null,
+  platform text not null default 'android',
+  enabled boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, token)
+);
+
+alter table push_tokens enable row level security;
+create policy "ver tokens propios" on push_tokens for select using (user_id = auth.uid());
+create policy "insertar tokens propios" on push_tokens for insert with check (user_id = auth.uid());
+create policy "actualizar tokens propios" on push_tokens for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "eliminar tokens propios" on push_tokens for delete using (user_id = auth.uid());
+create index if not exists idx_push_tokens_user on push_tokens (user_id);
+
+drop trigger if exists push_tokens_updated_at on push_tokens;
+create trigger push_tokens_updated_at before update on push_tokens for each row execute function set_updated_at();

@@ -55,6 +55,24 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 Lee `CONTRIBUTING.md`. El proyecto prioriza privacidad, mobile-first y lógica transparente sin dependencias obligatorias de IA externa.
 
+## Empaquetar como APK
+
+```bash
+npm install
+npm install --save-dev @capacitor/core @capacitor/cli @capacitor/android @capacitor/push-notifications @capacitor/app
+npx cap init "Mi Despensa" "com.midespensa.app"
+npx cap add android
+CAPACITOR_SERVER_URL=https://tu-dominio.vercel.app npx cap sync android
+npx cap open android
+```
+
+Luego en Android Studio: `Build → Build APK`.
+
+> La app carga la URL de Vercel dentro de un WebView nativo.  
+> No requiere build estático. Las actualizaciones son inmediatas.
+
+Ver `docs/capacitor.md` para más detalles.
+
 ## Verificación funcional
 
 - `npm run dev` debe arrancar en `localhost:3000`.

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { NavbarMobile } from "@/components/layout/NavbarMobile";
+import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { OnboardingGate } from "@/components/layout/OnboardingGate";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,12 +12,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user && !local) redirect("/auth/login");
   return (
     <>
-      <main className="pb-24">
+      <main className="pb-24 safe-bottom">
         <div className="mx-auto max-w-lg p-4">
           <OnboardingGate>{children}</OnboardingGate>
         </div>
       </main>
       <NavbarMobile />
+      <OfflineBanner />
     </>
   );
 }
