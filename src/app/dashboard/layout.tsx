@@ -1,0 +1,12 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { NavbarMobile } from "@/components/layout/NavbarMobile";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+  const { data: perfil } = await supabase.from("perfiles").select("nombre, avatar_url, grupo_id").eq("id", user.id).single();
+  return <div className="min-h-screen bg-crema md:grid md:grid-cols-[240px_1fr]"><Sidebar user={{ nombre: perfil?.nombre ?? user.email ?? "Usuario", avatar_url: perfil?.avatar_url }} /><main className="pb-24 md:pb-0"><div className="mx-auto max-w-6xl p-4 md:p-8">{children}</div></main><NavbarMobile /></div>;
+}

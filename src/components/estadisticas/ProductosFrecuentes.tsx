@@ -1,0 +1,2 @@
+import type { Producto } from "@/types";
+export function ProductosFrecuentes({ productos }: { productos: Producto[] }) { const top = Object.entries(productos.reduce<Record<string, number>>((a, p) => { a[p.nombre] = (a[p.nombre] ?? 0) + 1; return a; }, {})).sort((a,b)=>b[1]-a[1]).slice(0,10); return <section className="rounded-card bg-white p-5 shadow-sm"><h2 className="text-xl font-black">Productos más comprados</h2><ol className="mt-3 space-y-2">{top.map(([n,c]) => <li key={n} className="flex justify-between"><span>{n}</span><b>{c}</b></li>)}</ol></section>; }
