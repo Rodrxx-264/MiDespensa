@@ -60,6 +60,31 @@ mi-despensa/
 
 ## Funcionalidades actuales
 
+### Funciones inteligentes de presupuesto y compra
+
+La app ahora incluye lógica local, sin APIs externas de IA, para ayudar a comprar sin pasarse del presupuesto:
+
+- Prioridad por producto: `essential`, `important`, `optional`.
+- Modo `No me alcanza` con sugerencias de recorte por prioridad y subtotal.
+- Presupuesto por categoría con edición desde la UI.
+- Modo compra ultra rápido con precio real, tienda, producto similar, saltar, quitar y no encontrado.
+- Pegar lista desde WhatsApp/texto libre con parser de reglas.
+- Historial inteligente de precios basado en compras reales.
+- Comparador de tiendas según historial propio.
+- Sugerencias de lista recurrente basadas en historial.
+- Despensa en casa para evitar compras duplicadas.
+
+Lógica pura agregada:
+
+```txt
+src/lib/shopping/normalize.ts
+src/lib/shopping/parse-list.ts
+src/lib/shopping/budget-rescue.ts
+src/lib/shopping/price-insights.ts
+src/lib/shopping/category-budgets.ts
+src/lib/shopping/recurring-lists.ts
+```
+
 ### Landing pública
 
 Ruta:
@@ -132,9 +157,10 @@ Flujo actual:
 
 1. El usuario toca un producto pendiente.
 2. Se abre un modal.
-3. Ingresa precio real pagado.
+3. Ingresa precio real pagado con campo numérico grande.
 4. Selecciona tienda.
-5. Confirma compra.
+5. Puede marcar no encontrado, saltar, quitar o comprar similar.
+6. Confirma compra y la app avanza al siguiente pendiente.
 
 Esto alimenta la comparación contra el precio estimado.
 
@@ -178,6 +204,34 @@ Incluye:
 - Productos frecuentes.
 - Variación de precios.
 - Tiendas favoritas como sección preparada.
+- Productos que más subieron según historial.
+- Mejores precios recientes según historial.
+
+### Comparador de tiendas
+
+Ruta:
+
+```txt
+/dashboard/tiendas
+```
+
+Compara precios agrupando historial por producto normalizado y tienda. No afirma precios globales; solo muestra resultados según el historial del usuario.
+
+### Despensa en casa
+
+Ruta:
+
+```txt
+/dashboard/despensa
+```
+
+Inventario simple para productos en casa:
+
+- Agregar producto.
+- Buscar.
+- Marcar bajo stock.
+- Eliminar.
+- Categoría, unidad y cantidad.
 
 ### Grupos
 

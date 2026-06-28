@@ -1,6 +1,12 @@
 export type EstadoLista = "activa" | "completada";
 export type EstadoProducto = "pendiente" | "comprado";
+export type ProductPriority = "essential" | "important" | "optional";
+export type ProductStatus = "pending" | "purchased" | "not_found";
 export type Perfil = { id: string; nombre: string; email: string; avatar_url: string | null; grupo_id: string | null; created_at: string; updated_at: string };
 export type Grupo = { id: string; nombre: string; codigo_qr: string; admin_id: string; created_at: string };
 export type Lista = { id: string; grupo_id: string; nombre: string; estado: EstadoLista; presupuesto_maximo: number | null; total_estimado: number; total_real: number; notas: string | null; cerrada_por: string | null; created_at: string; completada_at: string | null };
-export type Producto = { id: string; lista_id: string; nombre: string; categoria: string; cantidad: number; unidad: string; precio_estimado: number | null; precio_real: number | null; tienda_sugerida: string | null; tienda_compra: string | null; estado: EstadoProducto; notas: string | null; agregado_por: string | null; agregado_por_nombre: string | null; comprado_por: string | null; comprado_por_nombre: string | null; created_at: string; updated_at: string };
+export type Producto = { id: string; lista_id: string; nombre: string; categoria: string; cantidad: number; unidad: string; precio_estimado: number | null; precio_real: number | null; tienda_sugerida: string | null; tienda_compra: string | null; estado: EstadoProducto; status?: ProductStatus | null; priority?: ProductPriority | null; substitute_name?: string | null; purchase_note?: string | null; normalized_name?: string | null; notas: string | null; agregado_por: string | null; agregado_por_nombre: string | null; comprado_por: string | null; comprado_por_nombre: string | null; created_at: string; updated_at: string };
+export type CategoryBudget = { id: string; list_id: string; category: string; budget: number; created_at: string; updated_at: string };
+export type PantryItem = { id: string; group_id: string; name: string; normalized_name: string; quantity: number; unit: string | null; category: string | null; expires_at: string | null; low_stock: boolean; created_by: string | null; created_at: string; updated_at: string };
+export type PriceHistoryEntry = { id: string; group_id: string | null; list_id: string | null; product_name: string; normalized_product_name: string; store: string | null; price: number; quantity: number; unit: string | null; purchased_at: string };
+export type ParsedProduct = { name: string; quantity: number; unit?: string; category?: string; priority?: ProductPriority };

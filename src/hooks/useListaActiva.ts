@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { hoyLista } from "@/lib/utils";
 import { ensureLocalList, isLocalMode, readLocalState, recalcLocalList, writeLocalState } from "@/lib/local";
+import { normalizeProductName } from "@/lib/shopping/normalize";
 import type { Lista, Producto } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 
@@ -45,15 +46,22 @@ export function useListaActiva(grupoId?: string | null) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user && localMode) {
       if (!lista) return; const state = readLocalState(); const created = new Date().toISOString();
-      state.productos.push({ id: crypto.randomUUID(), lista_id: lista.id, nombre: data.nombre ?? "Producto", categoria: data.categoria ?? "Otros", cantidad: Number(data.cantidad ?? 1), unidad: data.unidad ?? "unidad", precio_estimado: data.precio_estimado ?? null, precio_real: null, tienda_sugerida: data.tienda_sugerida ?? null, tienda_compra: null, estado: "pendiente", notas: data.notas ?? null, agregado_por: state.perfil.id, agregado_por_nombre: state.perfil.nombre, comprado_por: null, comprado_por_nombre: null, created_at: created, updated_at: created });
+      state.productos.push({ id: crypto.randomUUID(), lista_id: lista.id, nombre: data.nombre ?? "Producto", categoria: data.categoria ?? "Otros", cantidad: Number(data.cantidad ?? 1), unidad: data.unidad ?? "unidad", precio_estimado: data.precio_estimado ?? null, precio_real: null, tienda_sugerida: data.tienda_sugerida ?? null, tienda_compra: null, estado: "pendiente", status: "pending", priority: data.priority ?? "important", normalized_name: normalizeProductName(data.nombre ?? "Producto"), substitute_name: null, purchase_note: null, notas: data.notas ?? null, agregado_por: state.perfil.id, agregado_por_nombre: state.perfil.nombre, comprado_por: null, comprado_por_nombre: null, created_at: created, updated_at: created });
       writeLocalState(state); recalcLocalList(lista.id); toast(`${data.nombre ?? "Producto"} agregado en modo local`); await cargar(); return;
     }
     if (!lista || !user) return;
     const { data: perfil } = await supabase.from("perfiles").select("nombre").eq("id", user.id).single();
-    await supabase.from("productos").insert({ ...data, lista_id: lista.id, agregado_por: user.id, agregado_por_nombre: perfil?.nombre ?? user.email }); await cargar();
+    await supabase.from("productos").insert({ ...data, priority: data.priority ?? "important", status: "pending", normalized_name: normalizeProductName(data.nombre ?? "Producto"), lista_id: lista.id, agregado_por: user.id, agregado_por_nombre: perfil?.nombre ?? user.email }); await cargar();
   }
-  async function actualizar(id: string, data: Partial<Producto>) { if (localMode) { const state = readLocalState(); const p = state.productos.find((x) => x.id === id); if (p) Object.assign(p, data, { updated_at: new Date().toISOString() }); writeLocalState(state); if (p) recalcLocalList(p.lista_id); await cargar(); return; } await supabase.from("productos").update(data).eq("id", id); await cargar(); }
+  async function actualizar(id: string, data: Partial<Producto>) { if (localMode) { const state = readLocalState(); const p = state.productos.find((x) => x.id === id); if (p) { Object.assign(p, data, { normalized_name: normalizeProductName(data.substitute_name || data.nombre || p.substitute_name || p.nombre), updated_at: new Date().toISOString() }); if ((data.estado === "comprado" || data.status === "purchased") && p.precio_real) state.priceHistory.push({ id: crypto.randomUUID(), group_id: grupoId!, list_id: p.lista_id, product_name: p.substitute_name || p.nombre, normalized_product_name: p.normalized_name || normalizeProductName(p.substitute_name || p.nombre), store: p.tienda_compra, price: Number(p.precio_real), quantity: Number(p.cantidad || 1), unit: p.unidad, purchased_at: new Date().toISOString() }); } writeLocalState(state); if (p) recalcLocalList(p.lista_id); await cargar(); return; } const update = { ...data, ...(data.nombre || data.substitute_name ? { normalized_name: normalizeProductName(data.substitute_name || data.nombre || "") } : {}) }; await supabase.from("productos").update(update).eq("id", id); if (data.estado === "comprado" || data.status === "purchased") await guardarHistorialSupabase(id, update); await cargar(); }
   async function eliminar(id: string) { if (localMode) { const state = readLocalState(); const p = state.productos.find((x) => x.id === id); state.productos = state.productos.filter((x) => x.id !== id); writeLocalState(state); if (p) recalcLocalList(p.lista_id); await cargar(); return; } await supabase.from("productos").delete().eq("id", id); await cargar(); }
   async function cerrar(nombre: string) { if (!lista) return; if (localMode) { const state = readLocalState(); const l = state.listas.find((x) => x.id === lista.id); if (l) Object.assign(l, { estado: "completada", nombre, cerrada_por: state.perfil.id, completada_at: new Date().toISOString() }); writeLocalState(state); setLista(null); await cargar(); return; } const { data: { user } } = await supabase.auth.getUser(); await supabase.from("listas").update({ estado: "completada", nombre, cerrada_por: user?.id, completada_at: new Date().toISOString() }).eq("id", lista.id); setLista(null); await cargar(); }
+  async function guardarHistorialSupabase(id: string, data: Partial<Producto>) {
+    if (!grupoId || !lista) return;
+    const current = productos.find((p) => p.id === id);
+    const merged = { ...current, ...data } as Producto;
+    if (!merged.precio_real) return;
+    await supabase.from("historial_precios").insert({ grupo_id: grupoId, list_id: lista.id, producto_nombre: merged.substitute_name || merged.nombre, normalized_product_name: normalizeProductName(merged.substitute_name || merged.nombre), tienda: merged.tienda_compra || "Sin tienda", store: merged.tienda_compra || "Sin tienda", precio: merged.precio_real, quantity: merged.cantidad, unit: merged.unidad, purchased_at: new Date().toISOString(), presentacion: merged.unidad });
+  }
   return { lista, productos, agrupados, loading, agregar, actualizar, eliminar, cerrar, recargar: cargar };
 }
