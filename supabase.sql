@@ -195,3 +195,40 @@ drop trigger if exists category_budgets_updated_at on category_budgets;
 create trigger category_budgets_updated_at before update on category_budgets for each row execute function set_updated_at();
 drop trigger if exists pantry_items_updated_at on pantry_items;
 create trigger pantry_items_updated_at before update on pantry_items for each row execute function set_updated_at();
+
+-- Permite unirse por codigo aunque el usuario todavia no pertenezca al grupo.
+create or replace function join_group_by_code(invite_code text)
+returns table (id uuid, nombre text, codigo_qr text, admin_id uuid, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_group grupos%rowtype;
+  normalized_code text;
+begin
+  normalized_code := upper(regexp_replace(trim(invite_code), '[^A-Za-z0-9-]', '', 'g'));
+
+  select * into target_group
+  from grupos g
+  where upper(g.codigo_qr) = normalized_code
+  limit 1;
+
+  if target_group.id is null then
+    raise exception 'GROUP_NOT_FOUND';
+  end if;
+
+  update perfiles
+  set grupo_id = target_group.id, updated_at = now()
+  where perfiles.id = auth.uid()
+    and perfiles.grupo_id is null;
+
+  if not found then
+    raise exception 'PROFILE_ALREADY_HAS_GROUP_OR_NOT_FOUND';
+  end if;
+
+  return query select target_group.id, target_group.nombre, target_group.codigo_qr, target_group.admin_id, target_group.created_at;
+end;
+$$;
+
+grant execute on function join_group_by_code(text) to authenticated;

@@ -259,6 +259,8 @@ Ruta:
 
 Permite ingresar o leer un código QR para unirse a un grupo en Supabase. Si el usuario no tiene sesión, redirige a login conservando el código.
 
+La unión robusta usa la función SQL `join_group_by_code(invite_code text)`, definida en `supabase.sql`. Esta función evita problemas de RLS al buscar grupos por código antes de que el usuario pertenezca al grupo. Después de desplegar cambios de base de datos, ejecutar `supabase.sql` o al menos la sección de `join_group_by_code` en Supabase SQL Editor.
+
 ## Modos de persistencia
 
 ### Modo local
